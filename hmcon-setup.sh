@@ -1,10 +1,15 @@
 #!/bin/bash
 
-VERSION=0.1
+VERSION=0.2
+
+USER=hmcon
+PREFIX=/opt/hmcon
+VAR=$PREFIX/var
+ETC=$PREFIX/etc
 
 echo ""
-echo "  hmcon-setup.sh $VERSION"
-echo "Copyright (c) 2015 Sebastian 'hobbyquaker' Raff <hq@ccu.io>"
+echo "  Hmcon Setup $VERSION"
+echo "  ---------------"
 echo ""
 
 if [ "$(id -u)" != "0" ]; then
@@ -12,16 +17,9 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not installed.  Aborting."; exit 1; }
+command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not installed.  Aborting."; echo " exit 1; }
 command -v node >/dev/null 2>&1 || { echo >&2 "node required, but it's not installed.  Aborting."; exit 1; }
 command -v npm >/dev/null 2>&1 || { echo >&2 "npm required, but it's not installed.  Aborting."; exit 1; }
-
-PREFIX=/opt/hm
-#VAR=/var/opt/hm # FHS?
-#ETC=/etc/opt/hm # FHS?
-VAR=/opt/hm/var
-ETC=/opt/hm/etc
-USER=hmcon
 
 mkdir -p $ETC >/dev/null 2>&1
 mkdir -p $VAR >/dev/null 2>&1
@@ -51,7 +49,7 @@ if [ -d "$PREFIX/src/occu/.git" ]; then
     git pull $PREFIX/src/occu
     # FIXME OCCU broken - checkout last known good
     cd $PREFIX/src/occu
-     git checkout 7f08cf5
+    git checkout 7f08cf5
 else
     echo "Clone https://github.com/eq-3/occu"
     git clone https://github.com/eq-3/occu $PREFIX/src/occu
@@ -335,20 +333,7 @@ USER=$USER
 
 . /lib/lsb/init-functions
 
-case "\$1" in
-  start)
-    log_daemon_msg "Starting \$DESC" "\$NAME"
-    sudo -u $USER $PREFIX/node_modules/.bin/\$NAME start
-    ;;
-  stop)
-    log_daemon_msg "Stopping \$DESC" "\$NAME"
-    sudo -u $USER $PREFIX/node_modules/.bin/\$NAME stop
-    ;;
-  *)
-    echo "Usage: \$SCRIPTNAME {start|stop}" >&2
-    exit 3
-    ;;
-esac
+sudo -u $USER $PREFIX/node_modules/.bin/\$NAME $1
 
 :
 EOM
@@ -380,15 +365,28 @@ case "$choice" in
     * ) manager;;
 esac
 
-# Set rights
+# FIXME ugly
 chown -R $USER.$USER $PREFIX
 chown -R $USER.$USER $VAR
 chown -R $USER.$USER $ETC
 
 echo ""
-echo ""
-echo "Installation done."
+echo "Setup done."
+echo "-----------"
 echo "Configuration files are located in $ETC"
-echo "You may start rfd: sudo /etc/init.d/rfd start"
-echo "...and Homematic Manager: sudo /etc/init.d/hm-manager start"
-echo "Have fun :)"
+
+read -p "Start rfd now (Y/n)? " choice
+case "$choice" in
+    n|N ) ;;
+    * )
+        /etc/init.d/rfd restart
+    ;;
+esac
+
+read -p "Start Homematic Manager now (Y/n)? " choice
+case "$choice" in
+    n|N ) ;;
+    * )
+        /etc/init.d/hm-manager restart
+    ;;
+esac
