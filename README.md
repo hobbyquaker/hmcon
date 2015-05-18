@@ -24,6 +24,8 @@ chmod a+x hmcon-setup.sh
 sudo ./hmcon-setup.sh
 ```
 
+Updates können ebenfalls mit hmcon-setup.sh durchgeführt werden.
+
 Bisher auf folgenden Betriebssystemen getestet:
 
 * Debian Wheezy (armhf)
@@ -37,8 +39,12 @@ https://www.thomas-krenn.com/de/wiki/Debian_7_32bit_Libraries oder http://askubu
 
 ## Todo
 
+* Testen!
 * siehe Todo-Liste des Homematic Manager: https://github.com/hobbyquaker/homematic-manager/blob/master/Readme.md#Todo
-* hs485d testen, Startscript
+* hs485d testen, hs485d-Startscript
+* Sicherheitsschlüssel setzen
+* Backup/Restore (Restore auch aus CCU Backup, import der Namen aus regadom)
+* eq3configcmd
 
 ### Ausblick
 

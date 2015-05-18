@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.3
+VERSION=0.4
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -18,11 +18,9 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not installed.  Aborting."; exit 1; }
-command -v node >/dev/null 2>&1 || { echo >&2 "node required, but it's not installed.  Aborting."; exit 1; }
-command -v npm >/dev/null 2>&1 || { echo >&2 "npm required, but it's not installed.  Aborting."; exit 1; }
 
 mkdir -p $ETC >/dev/null 2>&1
-mkdir -p $VAR >/dev/null 2>&1
+mkdir -p $VAR/log >/dev/null 2>&1
 mkdir -p $PREFIX/bin >/dev/null 2>&1
 
 echo "$PREFIX/lib/" > /etc/ld.so.conf.d/hm.conf
@@ -66,24 +64,23 @@ else
 fi
 
 
-mkdir -p $VAR >/dev/null 2>&1
 cp -R $PREFIX/src/occu/firmware $PREFIX/
 
 
-function rfd {
+rfd() {
 
-    # FIXME RFD.handler path
+    # FIXME RFD.handler path https://github.com/eq-3/occu/issues/8
     touch /var/RFD.handlers
     chown $USER.$USER /var/RFD.handlers
 
 
-    # FIXME crypttool.cfg
+    # FIXME crypttool.cfg path https://github.com/eq-3/occu/issues/9
     mkdir -p /etc/config >/dev/null 2>&1
     chown $USER.$USER /etc/config
 
-    mkdir -p $ETC/rfd >/dev/null 2>&1
     mkdir -p $VAR/rfd/devices >/dev/null 2>&1
     mkdir -p $PREFIX/bin >/dev/null 2>&1
+
     cp $SRC/RFD/bin/rfd $PREFIX/bin/
     cp $SRC/RFD/bin/SetInterfaceClock $PREFIX/bin/
     cp $SRC/RFD/bin/avrprog $PREFIX/bin/
@@ -95,51 +92,35 @@ function rfd {
     ldconfig
 
     # Config file
-cat > $ETC/rfd.conf <<- EOM
-Listen Port = 2001
-Log Destination = File
-Log Filename = $VAR/rfd/rfd.log
-Log Identifier = rfd
-Log Level = 1
-Persist Keys = 1
-# PID File = $VAR/rfd/rfd.pid
-# UDS File = $VAR/rfd/socket_rfd
-Device Description Dir = $VAR/firmware/rftypes
-Device Files Dir = $VAR/rfd/devices
-Key File = $VAR/rfd/keys
-Address File = $VAR/rfd/ids
-Firmware Dir = $PREFIX/firmware
-Replacemap File = $PREFIX/firmware/rftypes/replaceMap/rfReplaceMap.xml
-EOM
-
-    function rfdInterface {
+    rfdInterface() {
         i=0
         ADD=1
         while [ $ADD -gt 0  ];
         do
 
-
+            echo ""
             PS3="Choose BidCos-RF interface $i type: "
-            options=("Serial" "USB" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
+            options=("HM-MOD-UART" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
 
             select opt in "${options[@]}"
             do
 
                 case $opt in
-                    "Serial")
+                    "HM-MOD-UART")
+# FIXME HM-MOD-UART config
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
-Type = CCU2
-ComPortFile = /dev/ttyAPP0
+Type = HM-MOD-UART
+ComPortFile = /dev/ttyAMA0
 AccessFile = /dev/null
-ResetFile = /dev/ccu2-ic200
 EOM
                         i=`expr $i + 1`
                         break
                         ;;
-                    "USB")
+                    "HM-CFG-USB-2")
                         echo -n "Input serial number: "
                         read SERIAL
+# FIXME HM-CFG-USB2 config
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = USB Interface
@@ -196,9 +177,43 @@ EOM
             esac
         done
     }
-    rfdInterface
 
+    if [ -f "$ETC/rfd.conf" ]; then
+        read -p "Keep existing rfd.conf (Y/n)? " choice
+        case "$choice" in
+            n|N )
+                NEW=1
+                ;;
+            * )
+                NEW=0
+                ;;
+        esac
+    else
+        NEW=1
+    fi
 
+    if [[ "$NEW" -gt 0 ]]; then
+        cat > $ETC/rfd.conf <<- EOM
+Listen Port = 2001
+Log Destination = File
+Log Filename = $VAR/log/rfd.log
+Log Identifier = rfd
+Log Level = 1
+Persist Keys = 1
+# PID File = $VAR/rfd/rfd.pid
+# UDS File = $VAR/rfd/socket_rfd
+Device Description Dir = $VAR/firmware/rftypes
+Device Files Dir = $VAR/rfd/devices
+Key File = $VAR/rfd/keys
+Address File = $VAR/rfd/ids
+Firmware Dir = $PREFIX/firmware
+Replacemap File = $PREFIX/firmware/rftypes/replaceMap/rfReplaceMap.xml
+EOM
+
+        rfdInterface
+    fi
+
+    echo ""
     read -p "Install startscript /etc/init.d/rfd (Y/n)? " choice
     case "$choice" in
          n|N )
@@ -264,7 +279,7 @@ EOM
 
 }
 
-function hs485d {
+hs485d() {
 
     mkdir -p $PREFIX/bin >/dev/null 2>&1
 
@@ -278,6 +293,7 @@ function hs485d {
     echo "$PREFIX/lib/" > /etc/ld.so.conf.d/hm.conf
     ldconfig
 
+    echo ""
     echo "Configure BidCos-Wired interface:"
     echo -n "Input serial number: "
     read SERIAL
@@ -299,10 +315,17 @@ EOM
 
 }
 
-function manager {
+manager() {
+
+    command -v node >/dev/null 2>&1 || { echo >&2 "Error: Homematic Manager install failed. node required, but it's not installed."; return 0; }
+    command -v npm >/dev/null 2>&1 || { echo >&2 "Error: Homematic Manager install failed. npm required, but it's not installed."; return 0; }
+
+
     cd $PREFIX
     npm install homematic-manager
+    ln -s $PREFIX/node_modules/.bin/hm-manager $PREFIX/bin/hm-manager >/dev/null 2>&1
 
+    echo ""
     read -p "Install startscript /etc/init.d/hm-manager (Y/n)? " choice
     case "$choice" in
          n|N )
@@ -352,6 +375,7 @@ EOM
 
 }
 
+echo ""
 read -p "Install rfd (Y/n)? " choice
 case "$choice" in
     n|N ) ;;
@@ -359,19 +383,21 @@ case "$choice" in
 esac
 
 # Todo hs485d tests and startscript
+#echo ""
 #read -p "Install hs485d (y/N)? " choice
 #case "$choice" in
 #    y|Y ) hs485d;;
 #    * ) ;;
 #esac
 
+echo ""
 read -p "Install Homematic Manager (Y/n)? " choice
 case "$choice" in
     n|N ) ;;
     * ) manager;;
 esac
 
-# FIXME ugly
+# FIXME ugly. what if $PREFIX is / ?!?
 chown -R $USER.$USER $PREFIX
 chown -R $USER.$USER $VAR
 chown -R $USER.$USER $ETC
@@ -381,18 +407,24 @@ echo "Setup done."
 echo "-----------"
 echo "Configuration files are located in $ETC"
 
+echo ""
 read -p "Start rfd now (Y/n)? " choice
 case "$choice" in
     n|N ) ;;
     * )
-        /etc/init.d/rfd restart
+        /etc/init.d/rfd start
     ;;
 esac
 
+echo ""
 read -p "Start Homematic Manager now (Y/n)? " choice
 case "$choice" in
     n|N ) ;;
     * )
-        /etc/init.d/hm-manager restart
+        $PREFIX/node_modules/.bin/hm-manager start
+        echo "Homematic Manager is on http://<ThisHost>:8081/"
     ;;
 esac
+
+echo ""
+echo "Have Fun :)"
