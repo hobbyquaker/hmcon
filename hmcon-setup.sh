@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.2
+VERSION=0.3
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -17,7 +17,7 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not installed.  Aborting."; echo " exit 1; }
+command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not installed.  Aborting."; exit 1; }
 command -v node >/dev/null 2>&1 || { echo >&2 "node required, but it's not installed.  Aborting."; exit 1; }
 command -v npm >/dev/null 2>&1 || { echo >&2 "npm required, but it's not installed.  Aborting."; exit 1; }
 
@@ -47,22 +47,28 @@ if [ -d "$PREFIX/src/occu/.git" ]; then
     echo "Pull https://github.com/eq-3/occu"
     git checkout master
     git pull $PREFIX/src/occu
-    # FIXME OCCU broken - checkout last known good
-    cd $PREFIX/src/occu
-    git checkout 7f08cf5
 else
     echo "Clone https://github.com/eq-3/occu"
     git clone https://github.com/eq-3/occu $PREFIX/src/occu
-    # FIXME OCCU broken - checkout last known good
-    cd $PREFIX/src/occu
-    git checkout 7f08cf5
 fi
 
+echo "Checking libs"
 if [[ "$ARCH" == "arm"* ]]; then
     SRC=$PREFIX/src/occu/arm-gnueabihf/packages-eQ-3
+    apt-get install libusb-1.0-0
 else
     SRC=$PREFIX/src/occu/X86_32_Debian_Wheezy/packages-eQ-3
+    if [[ "$ARCH" == "x86_64" ]]; then
+        apt-get install libusb-1.0-0:i386
+    else
+        apt-get install libusb-1.0-0
+    fi
 fi
+
+
+mkdir -p $VAR >/dev/null 2>&1
+cp -R $PREFIX/src/occu/firmware $PREFIX/
+
 
 function rfd {
 
@@ -83,7 +89,6 @@ function rfd {
     cp $SRC/RFD/bin/avrprog $PREFIX/bin/
     cp $SRC/RFD/bin/crypttool $PREFIX/bin/
 
-    cp -R $SRC/RFD/firmware $VAR/
 
     # Install libs
     cp -R $SRC/RFD/lib $PREFIX/
@@ -92,7 +97,8 @@ function rfd {
     # Config file
 cat > $ETC/rfd.conf <<- EOM
 Listen Port = 2001
-Log Destination = Syslog
+Log Destination = File
+Log Filename = $VAR/rfd/rfd.log
 Log Identifier = rfd
 Log Level = 1
 Persist Keys = 1
@@ -102,8 +108,8 @@ Device Description Dir = $VAR/firmware/rftypes
 Device Files Dir = $VAR/rfd/devices
 Key File = $VAR/rfd/keys
 Address File = $VAR/rfd/ids
-Firmware Dir = $VAR/firmware
-Replacemap File = $VAR/firmware/rftypes/replaceMap/rfReplaceMap.xml
+Firmware Dir = $PREFIX/firmware
+Replacemap File = $PREFIX/firmware/rftypes/replaceMap/rfReplaceMap.xml
 EOM
 
     function rfdInterface {
@@ -175,7 +181,7 @@ EOM
                         break
                         ;;
                     *)
-                        echo invalid option
+                        echo "invalid option"
                         ;;
                 esac
             done
