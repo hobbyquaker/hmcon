@@ -21,7 +21,7 @@ Konfigurationsdateien und Startscripte anlegt.
 ```Shell
 wget https://github.com/hobbyquaker/hmcon/raw/master/hmcon-setup.sh
 chmod a+x hmcon-setup.sh
-sudo hmcon-setup.sh
+sudo ./hmcon-setup.sh
 ```
 
 Bisher auf folgenden Betriebssystemen getestet:
