@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.4
+VERSION=0.5
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -21,6 +21,7 @@ command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not install
 
 mkdir -p $ETC >/dev/null 2>&1
 mkdir -p $VAR/log >/dev/null 2>&1
+mkdir -p $VAR/firmware >/dev/null 2>&1
 mkdir -p $PREFIX/bin >/dev/null 2>&1
 
 echo "$PREFIX/lib/" > /etc/ld.so.conf.d/hm.conf
@@ -202,11 +203,12 @@ Log Level = 1
 Persist Keys = 1
 # PID File = $VAR/rfd/rfd.pid
 # UDS File = $VAR/rfd/socket_rfd
-Device Description Dir = $VAR/firmware/rftypes
+Device Description Dir = $PREFIX/firmware/rftypes
 Device Files Dir = $VAR/rfd/devices
 Key File = $VAR/rfd/keys
 Address File = $VAR/rfd/ids
 Firmware Dir = $PREFIX/firmware
+User Firmware Dir = $VAR/firmware
 Replacemap File = $PREFIX/firmware/rftypes/replaceMap/rfReplaceMap.xml
 EOM
 

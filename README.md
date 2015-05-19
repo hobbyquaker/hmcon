@@ -6,11 +6,11 @@ Homematic Funk-/Wired-Schnittstellen-Software
 
 Hmcon dient als Schnittstelle zwischen Smarthome-Software (wie z.B. hm2mqtt, ioBroker oder OpenHAB) und Homematic Funk-
 und Wired-Geräten. Hierfür kommen die Schnittstellenprozesse "rfd" und "hs485d" zum Einsatz, die
-[eQ-3](http://www.eq-3.de) als Teil der [OCCU](https://github.com/eq-3/occu) zur Verfügung stellt. Auf die Logikschicht
+[eQ-3](http://www.eq-3.de) als Teil der [OCCU](https://github.com/eq-3/occu) in Binärform unter der
+["HMSL" Lizenz](https://github.com/eq-3/occu/blob/master/LicenseDE.txt) zur Verfügung stellt. Auf die Logikschicht
 "ReGa" und das HomeMatic WebUI wird bewusst verzichtet, Hmcon nutzt den
 [Homematic Manager](https://github.com/hobbyquaker/homematic-manager) als Weboberfläche zur Verwaltung von Geräten und
 Direktverknüpfungen.
-
 
 
 ## Installation
@@ -50,18 +50,19 @@ https://www.thomas-krenn.com/de/wiki/Debian_7_32bit_Libraries oder http://askubu
 
 ![architecture](img/hmcon-future.png)
 
-## Lizenz
+## Lizenzen
 
-Copyright (c) 2015 Sebastian 'hobbyquaker' Raff <hq@ccu.io>
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+### hmcon
 
-http://www.apache.org/licenses/LICENSE-2.0
+[MIT](http://de.wikipedia.org/wiki/MIT-Lizenz)
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+### Homematic Manager
+
+Copyright (c) 2014, 2015 Anli, Hobbyquaker
+
+[CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+#### OCCU
+
+[eQ-3](http://www.eq-3.de) [HMSL](https://github.com/eq-3/occu/blob/master/LicenseDE.txt)
