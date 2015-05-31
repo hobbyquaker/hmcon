@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.5
+VERSION=0.6
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -22,7 +22,10 @@ command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not install
 mkdir -p $ETC >/dev/null 2>&1
 mkdir -p $VAR/log >/dev/null 2>&1
 mkdir -p $VAR/firmware >/dev/null 2>&1
+mkdir -p $PREFIX/lib >/dev/null 2>&1
 mkdir -p $PREFIX/bin >/dev/null 2>&1
+
+echo "{\"version\":\"$VERSION\"}" > $PREFIX/hmcon.json
 
 echo "$PREFIX/lib/" > /etc/ld.so.conf.d/hm.conf
 
@@ -45,7 +48,7 @@ if [ -d "$PREFIX/src/occu/.git" ]; then
     cd $PREFIX/src/occu
     echo "Pull https://github.com/eq-3/occu"
     git checkout master
-    git pull $PREFIX/src/occu
+    git pull
 else
     echo "Clone https://github.com/eq-3/occu"
     git clone https://github.com/eq-3/occu $PREFIX/src/occu
@@ -58,6 +61,7 @@ if [[ "$ARCH" == "arm"* ]]; then
 else
     SRC=$PREFIX/src/occu/X86_32_Debian_Wheezy/packages-eQ-3
     if [[ "$ARCH" == "x86_64" ]]; then
+        apt-get install libc6:i386 libstdc++6:i386
         apt-get install libusb-1.0-0:i386
     else
         apt-get install libusb-1.0-0
@@ -66,18 +70,10 @@ fi
 
 
 cp -R $PREFIX/src/occu/firmware $PREFIX/
-
+cp $SRC/LinuxBasis/bin/eq3configcmd $PREFIX/bin/
+cp $SRC/LinuxBasis/lib/libeq3config.so $PREFIX/lib/
 
 rfd() {
-
-    # FIXME RFD.handler path https://github.com/eq-3/occu/issues/8
-    touch /var/RFD.handlers
-    chown $USER.$USER /var/RFD.handlers
-
-
-    # FIXME crypttool.cfg path https://github.com/eq-3/occu/issues/9
-    mkdir -p /etc/config >/dev/null 2>&1
-    chown $USER.$USER /etc/config
 
     mkdir -p $VAR/rfd/devices >/dev/null 2>&1
     mkdir -p $PREFIX/bin >/dev/null 2>&1
@@ -85,7 +81,6 @@ rfd() {
     cp $SRC/RFD/bin/rfd $PREFIX/bin/
     cp $SRC/RFD/bin/SetInterfaceClock $PREFIX/bin/
     cp $SRC/RFD/bin/avrprog $PREFIX/bin/
-    cp $SRC/RFD/bin/crypttool $PREFIX/bin/
 
 
     # Install libs
@@ -209,6 +204,7 @@ Key File = $VAR/rfd/keys
 Address File = $VAR/rfd/ids
 Firmware Dir = $PREFIX/firmware
 User Firmware Dir = $VAR/firmware
+XmlRpcHandlersFile = $VAR/rfd/RFD.handlers
 Replacemap File = $PREFIX/firmware/rftypes/replaceMap/rfReplaceMap.xml
 EOM
 
