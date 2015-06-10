@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.6
+VERSION=0.7
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -122,6 +122,10 @@ cat >> $ETC/rfd.conf <<- EOM
 Type = USB Interface
 Serial Number = $SERIAL
 EOM
+                        # Add UDEV Rule to prevent occupation of USB Interface
+                        # FIXME ugly world writeable. Should be USER=\"$USER\" instead of MODE=\"0666\" - but this didn't work with ubuntu
+                        echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1b1f\", ATTR{idProduct}==\"c00f\", MODE=\"0666\"" > /etc/udev/rules.d/homematic.rules
+
                         i=`expr $i + 1`
                         break
                         ;;
