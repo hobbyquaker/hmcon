@@ -15,6 +15,20 @@ Direktverknüpfungen.
 
 ## Installation
 
+#### Voraussetzungen
+
+Hmcon benötigt nodejs.
+
+dies wird installiert über:
+
+```Shell
+wget http://download.iobroker.org/nodejs_0.10.22-1_armhf.deb
+dpkg -i nodejs_0.10.22-1_armhf.deb
+rm nodejs_0.10.22-1_armhf.deb
+```
+
+####Installation von hmcon
+
 Hmcon wird mit einem interaktiven Shell-Script installiert, dass die benötigten Software-Komponenten herunterlädt sowie
 Konfigurationsdateien und Startscripte anlegt.
 
