@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.7
+VERSION=0.8
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -124,7 +124,8 @@ Serial Number = $SERIAL
 EOM
                         # Add UDEV Rule to prevent occupation of USB Interface
                         # FIXME ugly world writeable. Should be USER=\"$USER\" instead of MODE=\"0666\" - but this didn't work with ubuntu
-                        echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1b1f\", ATTR{idProduct}==\"c00f\", MODE=\"0666\"" > /etc/udev/rules.d/homematic.rules
+                        echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1b1f\", ATTR{idProduct}==\"c00f\", MODE:=\"0666\"" > /etc/udev/rules.d/homematic.rules
+                        echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1b1f\", ATTR{idProduct}==\"c010\", MODE:=\"0666\"" >> /etc/udev/rules.d/homematic.rules
 
                         i=`expr $i + 1`
                         break
@@ -226,9 +227,9 @@ EOM
 cat > /etc/init.d/rfd <<- EOM
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          skeleton
-# Required-Start:    \$remote_fs $syslog
-# Required-Stop:     \$remote_fs $syslog
+# Provides:          rfd
+# Required-Start:    \$remote_fs \$syslog
+# Required-Stop:     \$remote_fs \$syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: HomeMatic rfd
@@ -338,9 +339,9 @@ manager() {
 cat > /etc/init.d/hm-manager <<- EOM
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          skeleton
-# Required-Start:    \$remote_fs $syslog
-# Required-Stop:     \$remote_fs $syslog
+# Provides:          hm-manager
+# Required-Start:    \$remote_fs \$syslog
+# Required-Stop:     \$remote_fs \$syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Homematic Manager
