@@ -34,11 +34,26 @@ echo "export PATH" >> /etc/profile.d/hm.sh
 chmod a+x /etc/profile.d/hm.sh
 /etc/profile.d/hm.sh
 
+if [ -f "/etc/init.d/rfd" ]; then
+    /etc/init.d/rfd stop
+    echo ""
+fi
+if [ -f "/etc/init.d/hs485d" ]; then
+    /etc/init.d/hs485d stop
+    echo ""
+fi
+if [ -f "/etc/init.d/hm-manager" ]; then
+    /etc/init.d/hm-manager stop
+    echo ""
+fi
+
+
+
 if id -u "$USER" >/dev/null 2>&1; then
-        echo "User $USER already exists"
+        usermod -s /bin/false -d $PREFIX $USER
 else
         echo "Adding user $USER"
-        useradd -r -s /bin/false $USER
+        useradd -r -s /bin/false -d $PREFIX $USER
 fi
 
 ARCH=`arch`
@@ -180,6 +195,7 @@ EOM
     }
 
     if [ -f "$ETC/rfd.conf" ]; then
+        echo ""
         read -p "Keep existing rfd.conf (Y/n)? " choice
         case "$choice" in
             n|N )
@@ -318,6 +334,27 @@ EOM
 
 }
 
+
+
+echo ""
+read -p "Install rfd (Y/n)? " choice
+case "choice" in
+    n|N ) ;;
+    * )
+        RF=1
+        rfd;;
+esac
+
+# Todo hs485d tests and startscript
+#echo ""
+#read -p "Install hs485d (y/N)? " choice
+#case "choice" in
+#    y|Y )
+#       WIRED=1
+#       hs485d;;
+#    * ) ;;
+#esac
+
 manager() {
 
     command -v node >/dev/null 2>&1 || { echo >&2 "Error: Homematic Manager install failed. node required, but it's not installed."; return 0; }
@@ -327,6 +364,28 @@ manager() {
     cd $PREFIX
     npm install homematic-manager
     ln -s $PREFIX/node_modules/.bin/hm-manager $PREFIX/bin/hm-manager >/dev/null 2>&1
+
+    echo ""
+    read -p "Choose Homematic Manager webserver port [8081] " INPUT
+    PORT=${INPUT:-8081}
+
+cat > $PREFIX/etc/hm-manager.json <<- EOM
+{
+    "webServerPort": $PORT,
+    "rpcListenIp": "127.0.0.1",
+    "rpcListenPort": "2015",
+    "rpcListenPortBin": "2016",
+    "daemons": {
+        "RF": {
+            "type": "BidCos-RF",
+            "ip": "127.0.0.1",
+            "port": 2001,
+            "protocol": 'bin'
+        }
+    },
+    "language": "de"
+}
+EOM
 
     echo ""
     read -p "Install startscript /etc/init.d/hm-manager (Y/n)? " choice
@@ -350,7 +409,7 @@ cat > /etc/init.d/hm-manager <<- EOM
 
 # Author: Sebastian 'hobbyquaker' Raff <hq@ccu.io>
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/hm/bin:/opt/hm/node_modules/.bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/hm/bin:$PREFIX/node_modules/.bin
 DESC="Homematic Webinterface"
 NAME=hm-manager
 DAEMON=$PREFIX/node_modules/.bin/\$NAME
@@ -365,7 +424,7 @@ USER=$USER
 
 . /lib/lsb/init-functions
 
-sudo -u $USER $PREFIX/node_modules/.bin/\$NAME $1
+sudo -u \$USER $PREFIX/node_modules/.bin/\$NAME \$1
 
 :
 EOM
@@ -378,20 +437,6 @@ EOM
 
 }
 
-echo ""
-read -p "Install rfd (Y/n)? " choice
-case "$choice" in
-    n|N ) ;;
-    * ) rfd;;
-esac
-
-# Todo hs485d tests and startscript
-#echo ""
-#read -p "Install hs485d (y/N)? " choice
-#case "$choice" in
-#    y|Y ) hs485d;;
-#    * ) ;;
-#esac
 
 echo ""
 read -p "Install Homematic Manager (Y/n)? " choice
@@ -409,6 +454,7 @@ echo ""
 echo "Setup done."
 echo "-----------"
 echo "Configuration files are located in $ETC"
+echo "Logfiles are located in $VAR/log"
 
 echo ""
 read -p "Start rfd now (Y/n)? " choice
@@ -425,7 +471,7 @@ case "$choice" in
     n|N ) ;;
     * )
         $PREFIX/node_modules/.bin/hm-manager start
-        echo "Homematic Manager is on http://<ThisHost>:8081/"
+        echo "Homematic Manager listening on http://`hostname`:$PORT/"
     ;;
 esac
 
