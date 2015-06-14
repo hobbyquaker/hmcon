@@ -17,9 +17,9 @@ Direktverknüpfungen.
 
 #### Voraussetzungen
 
-Hmcon benötigt nodejs.
+Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Nodejs](https://nodejs.org/) Installation.
 
-dies wird installiert über:
+Für Debian armhf (Raspbian u.Ä.) kann auch das Paket von ioBroker genutzt werden:
 
 ```Shell
 wget http://download.iobroker.org/nodejs_0.10.22-1_armhf.deb
@@ -27,7 +27,9 @@ dpkg -i nodejs_0.10.22-1_armhf.deb
 rm nodejs_0.10.22-1_armhf.deb
 ```
 
-####Installation von hmcon
+
+
+#### Installation von Hmcon
 
 Hmcon wird mit einem interaktiven Shell-Script installiert, dass die benötigten Software-Komponenten herunterlädt sowie
 Konfigurationsdateien und Startscripte anlegt.
@@ -63,7 +65,7 @@ https://www.thomas-krenn.com/de/wiki/Debian_7_32bit_Libraries oder http://askubu
 ## Lizenzen
 
 
-### hmcon
+### hmcon-setup.sh
 
 [MIT](http://de.wikipedia.org/wiki/MIT-Lizenz)
 
