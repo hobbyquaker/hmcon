@@ -53,15 +53,6 @@ Um Hmcon auf einem 64Bit Betriebssystem auszuführen siehe
 https://www.thomas-krenn.com/de/wiki/Debian_7_32bit_Libraries oder http://askubuntu.com/questions/454253/how-to-run-32-bit-app-in-ubuntu-64-bit.
 
 
-## Todo
-
-* Testen!
-* siehe Todo-Liste des Homematic Manager: https://github.com/hobbyquaker/homematic-manager/blob/master/Readme.md#Todo
-* hs485d testen, Config und Startscript anlegen
-* Backup/Restore (Restore auch aus CCU Backup, import der Namen aus regadom)
-* eq3configcmd
-
-
 ## Lizenzen
 
 
@@ -75,6 +66,6 @@ Copyright (c) 2014, 2015 Anli, Hobbyquaker
 
 [CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-#### OCCU
+### OCCU
 
 [eQ-3](http://www.eq-3.de) [HMSL](https://github.com/eq-3/occu/blob/master/LicenseDE.txt)
