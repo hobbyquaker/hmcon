@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.8
+VERSION=0.10
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -380,12 +380,13 @@ cat > $PREFIX/etc/hm-manager.json <<- EOM
             "type": "BidCos-RF",
             "ip": "127.0.0.1",
             "port": 2001,
-            "protocol": 'bin'
+            "protocol": "binrpc"
         }
     },
     "language": "de"
 }
 EOM
+    chown $USER $PREFIX/etc/hm-manager.json
 
     echo ""
     read -p "Install startscript /etc/init.d/hm-manager (Y/n)? " choice
