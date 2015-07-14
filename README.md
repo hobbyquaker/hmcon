@@ -19,13 +19,7 @@ Direktverknüpfungen.
 
 Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Nodejs](https://nodejs.org/) Installation.
 
-Für Debian armhf (Raspbian u.Ä.) kann auch das Paket von ioBroker genutzt werden:
-
-```Shell
-wget http://download.iobroker.org/nodejs_0.10.22-1_armhf.deb
-dpkg -i nodejs_0.10.22-1_armhf.deb
-rm nodejs_0.10.22-1_armhf.deb
-```
+Für Debian armhf (RaspberryPi, ...) siehe https://github.com/nathanjohnson320/node_arm
 
 
 
