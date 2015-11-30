@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.10
+VERSION=0.11
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -111,19 +111,20 @@ rfd() {
 
             echo ""
             PS3="Choose BidCos-RF interface $i type: "
-            options=("HM-MOD-UART" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
+            options=("HM-MOD-RPI-PCB" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
 
             select opt in "${options[@]}"
             do
 
                 case $opt in
-                    "HM-MOD-UART")
-# FIXME HM-MOD-UART config
+                    "HM-MOD-RPI-PCB")
+# FIXME configure GPIO18, remove serial console
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
-Type = HM-MOD-UART
+Type = CCU2
 ComPortFile = /dev/ttyAMA0
 AccessFile = /dev/null
+ResetFile = /sys/class/gpio/gpio18/value
 EOM
                         i=`expr $i + 1`
                         break
