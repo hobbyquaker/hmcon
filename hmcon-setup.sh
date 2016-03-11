@@ -381,7 +381,10 @@ manager() {
     echo ""
     read -p "Choose Homematic Manager webserver port [8081] " INPUT
     PORT=${INPUT:-8081}
-
+    nc -z localhost $PORT
+    if [ $? -eq 0 ]; then
+            echo "Warning Port $PORT seems to be already in use"
+    fi
 cat > $PREFIX/etc/hm-manager.json <<- EOM
 {
     "webServerPort": $PORT,
