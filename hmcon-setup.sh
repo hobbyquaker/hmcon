@@ -123,6 +123,8 @@ SetupGPIO="# export GPIO
 echo 18 > /sys/class/gpio/export
 echo out > /sys/class/gpio/gpio18/direction
 "
+# allow hmcon gpio access when using HM-MOD-RPI-PCB
+usermod -a -G gpio hmcon
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = CCU2
