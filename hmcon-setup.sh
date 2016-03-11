@@ -119,6 +119,10 @@ rfd() {
                 case $opt in
                     "HM-MOD-RPI-PCB")
 # FIXME configure GPIO18, remove serial console
+SetupGPIO="# export GPIO
+echo 18 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio18/direction
+"
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = CCU2
@@ -270,6 +274,7 @@ USER=$USER
 
 . /lib/lsb/init-functions
 
+$SetupGPIO
 case "\$1" in
   start)
     log_daemon_msg "Starting \$DESC" "\$NAME"
@@ -363,6 +368,7 @@ manager() {
 
 
     cd $PREFIX
+    npm cache clean
     npm install homematic-manager
     ln -s $PREFIX/node_modules/.bin/hm-manager $PREFIX/bin/hm-manager >/dev/null 2>&1
 
