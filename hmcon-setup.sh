@@ -118,7 +118,7 @@ rfd() {
 
                 case $opt in
                     "HM-MOD-RPI-PCB")
-                    # FIXME configure GPIO18, remove serial console
+
                     #prepare additional snippet for rfd init script
 SetupGPIO="# export GPIO
   if [ ! -d /sys/class/gpio/gpio18 ] ; then
@@ -128,13 +128,13 @@ SetupGPIO="# export GPIO
 "
                     # disable serial console
                     read -d . DEBIAN_VERSION < /etc/debian_version
-                      if [DEBIAN_VERSION==8]; then
+                    if (($DEBIAN_VERSION==8)); then
                         echo 'disabling serial-getty'
                         systemctl disable serial-getty@ttyAMA0.service
                       else
                        # give user a reminder
                        echo '! you will need to disable the boot up and diagnostic output to the serial port: remove ttyAMA0 entries --> #sudo vi /boot/cmdline.txt'
-                       echo '! you will need to comment ttyAMA0 --> #sudo vi /etc/inittab delete or comment #T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100'
+                       echo '! you will need to comment out ttyAMA0 --> #sudo vi /etc/inittab delete or comment #T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100'
                       fi
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
                     usermod -a -G gpio hmcon
