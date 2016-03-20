@@ -571,10 +571,10 @@ cat > /etc/init.d/hm-manager <<- EOM
 
 # Author: Sebastian 'hobbyquaker' Raff <hq@ccu.io>
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/hm/bin:$PREFIX/node_modules/.bin
+PATH=/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin:/opt/hm/bin
 DESC="Homematic Webinterface"
 NAME=hm-manager
-DAEMON=$PREFIX/node_modules/.bin/\$NAME
+DAEMON=$PREFIX/bin/\$NAME
 DAEMON_ARGS=""
 PIDFILE=$VAR/hm-manager/\$NAME.pid
 SCRIPTNAME=/etc/init.d/\$NAME
@@ -612,30 +612,50 @@ chown -R $USER.$USER $PREFIX
 chown -R $USER.$USER $VAR
 chown -R $USER.$USER $ETC
 
+read -d . DEBIAN_VERSION < /etc/debian_version
+if (($DEBIAN_VERSION==8)); then
+    systemctl daemon-reload
+fi
+
 echo ""
 echo "Setup done."
 echo "-----------"
 echo "Configuration files are located in $ETC"
 echo "Logfiles are located in $VAR/log"
 
-echo ""
-read -p "Start rfd now (Y/n)? " choice
-case "$choice" in
-    n|N ) ;;
-    * )
-        /etc/init.d/rfd start
-    ;;
-esac
+if [ -f "$ETC/rfd.conf" ]; then
+    echo ""
+    read -p "Start rfd now (Y/n)? " choice
+    case "$choice" in
+        n|N ) ;;
+        * )
+            /etc/init.d/rfd start
+        ;;
+    esac
+fi
 
-echo ""
-read -p "Start Homematic Manager now (Y/n)? " choice
-case "$choice" in
-    n|N ) ;;
-    * )
-        $PREFIX/node_modules/.bin/hm-manager start
-        echo "Homematic Manager listening on http://`hostname`:$PORT/"
-    ;;
-esac
+if [ -f "$ETC/hs485d.conf" ]; then
+    echo ""
+    read -p "Start hs485d now (Y/n)? " choice
+    case "$choice" in
+        n|N ) ;;
+        * )
+            /etc/init.d/hs485d start
+        ;;
+    esac
+fi
+
+if [ -f "$ETC/hm-manager.json" ]; then
+    echo ""
+    read -p "Start Homematic Manager now (Y/n)? " choice
+    case "$choice" in
+        n|N ) ;;
+        * )
+            /etc/init.d/hm-manager start
+            echo "Homematic Manager listening on http://`hostname`:$PORT/"
+        ;;
+    esac
+fi
 
 echo ""
 echo "Have Fun :)"
