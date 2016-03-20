@@ -93,9 +93,16 @@ rfd() {
     mkdir -p $VAR/rfd/devices >/dev/null 2>&1
     mkdir -p $PREFIX/bin >/dev/null 2>&1
 
+    # use rfd from 2.15 occu
+    cd $PREFIX/src/occu
+    echo "checking out 2.15.5 "
+    git checkout 83e776407df0fe65cea7b5cb4f62307088e1c887 .
+
     cp $SRC/RFD/bin/rfd $PREFIX/bin/
     cp $SRC/RFD/bin/SetInterfaceClock $PREFIX/bin/
     cp $SRC/RFD/bin/avrprog $PREFIX/bin/
+
+    git reset --hard
 
 
     # Install libs
