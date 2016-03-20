@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.10
+VERSION=0.11
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -111,19 +111,40 @@ rfd() {
 
             echo ""
             PS3="Choose BidCos-RF interface $i type: "
-            options=("HM-MOD-UART" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
+            options=("HM-MOD-RPI-PCB" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
 
             select opt in "${options[@]}"
             do
 
                 case $opt in
-                    "HM-MOD-UART")
-# FIXME HM-MOD-UART config
+                    "HM-MOD-RPI-PCB")
+
+                    #prepare additional snippet for rfd init script
+SetupGPIO="# export GPIO
+  if [ ! -d /sys/class/gpio/gpio18 ] ; then
+      echo 18 > /sys/class/gpio/export
+      echo out > /sys/class/gpio/gpio18/direction
+  fi
+"
+                    # disable serial console
+                    read -d . DEBIAN_VERSION < /etc/debian_version
+                    if (($DEBIAN_VERSION==8)); then
+                        echo 'disabling serial-getty'
+                        systemctl disable serial-getty@ttyAMA0.service
+                      else
+                       # give user a reminder
+                       echo '! you will need to disable the boot up and diagnostic output to the serial port: remove ttyAMA0 entries --> #sudo vi /boot/cmdline.txt'
+                       echo '! you will need to comment out ttyAMA0 --> #sudo vi /etc/inittab delete or comment #T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100'
+                      fi
+                    # allow hmcon gpio access when using HM-MOD-RPI-PCB
+                    usermod -a -G gpio hmcon
+
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
-Type = HM-MOD-UART
+Type = CCU2
 ComPortFile = /dev/ttyAMA0
 AccessFile = /dev/null
+ResetFile = /sys/class/gpio/gpio18/value
 EOM
                         i=`expr $i + 1`
                         break
@@ -269,6 +290,7 @@ USER=$USER
 
 . /lib/lsb/init-functions
 
+$SetupGPIO
 case "\$1" in
   start)
     log_daemon_msg "Starting \$DESC" "\$NAME"
@@ -372,13 +394,17 @@ manager() {
 
 
     cd $PREFIX
+    npm cache clean
     npm install homematic-manager
     ln -s $PREFIX/node_modules/.bin/hm-manager $PREFIX/bin/hm-manager >/dev/null 2>&1
 
     echo ""
     read -p "Choose Homematic Manager webserver port [8081] " INPUT
     PORT=${INPUT:-8081}
-
+    nc -z localhost $PORT
+    if [ $? -eq 0 ]; then
+            echo "Warning Port $PORT seems to be already in use!"
+    fi
 cat > $PREFIX/etc/hm-manager.json <<- EOM
 {
     "webServerPort": $PORT,
