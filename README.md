@@ -39,6 +39,7 @@ Updates können ebenfalls mit hmcon-setup.sh durchgeführt werden.
 Bisher auf folgenden Betriebssystemen getestet:
 
 * Debian Wheezy (armhf)
+* Debian Jessie (armhf)
 * Ubuntu 14.04 (amd64)
 
 Unterstützte Architekturen: armhf, i386, amd64
