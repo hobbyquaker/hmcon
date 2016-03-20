@@ -131,12 +131,13 @@ SetupGPIO="# export GPIO
                     if (($DEBIAN_VERSION==8)); then
                         echo 'disabling serial-getty'
                         systemctl disable serial-getty@ttyAMA0.service
-                      else
-                       # give user a reminder
-                       echo '! you will need to disable the boot up and diagnostic output to the serial port: remove ttyAMA0 entries --> #sudo vi /boot/cmdline.txt'
-                       echo '! you will need to comment out ttyAMA0 --> #sudo vi /etc/inittab delete or comment #T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100'
-                      fi
+                    else
+                        echo 'disabling serial console'
+                        sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
+                        sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
+                    fi
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
+                    echo "adding user hmcon to gpio group"
                     usermod -a -G gpio hmcon
 
 cat >> $ETC/rfd.conf <<- EOM
@@ -152,7 +153,6 @@ EOM
                     "HM-CFG-USB-2")
                         echo -n "Input serial number: "
                         read SERIAL
-# FIXME HM-CFG-USB2 config
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = USB Interface
