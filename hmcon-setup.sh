@@ -377,11 +377,14 @@ EOM
 
 echo ""
 read -p "Install rfd (Y/n)? " choice
-case "choice" in
-    n|N ) ;;
+case "$choice" in
+    n|N )
+        ;;
     * )
         RF=1
-        rfd;;
+        rfd
+        ;;
+
 esac
 
 # Todo hs485d tests and startscript
