@@ -329,6 +329,7 @@ EOM
 
 hs485d() {
 
+    mkdir -p $VAR/hs485d/devices >/dev/null 2>&1
     mkdir -p $PREFIX/bin >/dev/null 2>&1
 
 
@@ -371,6 +372,74 @@ Encryption Key = $KEY
 IP Address = $IP
 EOM
 
+    echo ""
+    read -p "Install startscript /etc/init.d/hs485d (Y/n)? " choice
+    case "$choice" in
+         n|N )
+            ADD=0
+            ;;
+        * )
+
+cat > /etc/init.d/hs485d <<- EOM
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          hs485d
+# Required-Start:    \$remote_fs \$syslog
+# Required-Stop:     \$remote_fs \$syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: HomeMatic hs485d
+# Description:       HomeMatic BidCoS-RF interface process
+### END INIT INFO
+
+# Author: Sebastian 'hobbyquaker' Raff <hq@ccu.io>
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/hm/bin
+DESC="HomeMatic BidCoS-RF interface process"
+NAME=hs485d
+DAEMON=$PREFIX/bin/\$NAME
+DAEMON_ARGS="-f $ETC/hs485d.conf -d"
+PIDFILE=$VAR/hs485d/\$NAME.pid
+SCRIPTNAME=/etc/init.d/\$NAME
+USER=$USER
+
+[ -x "\$DAEMON" ] || exit 0
+
+. /lib/init/vars.sh
+
+. /lib/lsb/init-functions
+
+$SetupGPIO
+case "\$1" in
+  start)
+    log_daemon_msg "Starting \$DESC" "\$NAME"
+    start-stop-daemon --start --quiet -c \$USER --exec \$DAEMON -- \$DAEMON_ARGS
+    ;;
+  stop)
+    log_daemon_msg "Stopping \$DESC" "\$NAME"
+    start-stop-daemon -K -q -u \$USER -n \$NAME
+    ;;
+  status)
+    status_of_proc "\$DAEMON" "\$NAME" && exit 0 || exit \$?
+    ;;
+  *)
+    echo "Usage: \$SCRIPTNAME {start|stop|status}" >&2
+    exit 3
+    ;;
+esac
+
+:
+EOM
+
+        chmod a+x /etc/init.d/hs485d
+        update-rc.d hs485d defaults
+
+
+        ;;
+    esac
+
+
+
 }
 
 
@@ -387,14 +456,16 @@ case "$choice" in
 
 esac
 
-# Todo hs485d tests and startscript
+# Todo hs485d tests
 #echo ""
 #read -p "Install hs485d (y/N)? " choice
-#case "choice" in
+#case "$choice" in
 #    y|Y )
-#       WIRED=1
-#       hs485d;;
-#    * ) ;;
+#        WIRED=1
+#        hs485d
+#        ;;
+#    * )
+#        ;;
 #esac
 
 manager() {
@@ -415,6 +486,31 @@ manager() {
     if [ $? -eq 0 ]; then
             echo "Warning Port $PORT seems to be already in use!"
     fi
+    if [ $WIRED -eq 1 ]; then
+cat > $PREFIX/etc/hm-manager.json <<- EOM
+{
+    "webServerPort": $PORT,
+    "rpcListenIp": "127.0.0.1",
+    "rpcListenPort": "2015",
+    "rpcListenPortBin": "2016",
+    "daemons": {
+        "RF": {
+            "type": "BidCos-RF",
+            "ip": "127.0.0.1",
+            "port": 2001,
+            "protocol": "binrpc"
+        },
+        "Wired": {
+            "type": "BidCos-Wired",
+            "ip": "127.0.0.1",
+            "port": 2000,
+            "protocol": "binrpc"
+        }
+    },
+    "language": "de"
+}
+EOM
+    else
 cat > $PREFIX/etc/hm-manager.json <<- EOM
 {
     "webServerPort": $PORT,
@@ -432,6 +528,8 @@ cat > $PREFIX/etc/hm-manager.json <<- EOM
     "language": "de"
 }
 EOM
+    fi
+
     chown $USER $PREFIX/etc/hm-manager.json
 
     echo ""
