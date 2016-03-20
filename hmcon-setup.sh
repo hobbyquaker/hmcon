@@ -227,17 +227,17 @@ EOM
         read -p "Keep existing rfd.conf (Y/n)? " choice
         case "$choice" in
             n|N )
-                NEW=1
+                NEWRFDCONF=1
                 ;;
             * )
-                NEW=0
+                NEWRFDCONF=0
                 ;;
         esac
     else
-        NEW=1
+        NEWRFDCONF=1
     fi
 
-    if [[ "$NEW" -gt 0 ]]; then
+    if [[ "$NEWRFDCONF" -gt 0 ]]; then
         cat > $ETC/rfd.conf <<- EOM
 Listen Port = 2001
 Log Destination = File
@@ -342,14 +342,31 @@ hs485d() {
     echo "$PREFIX/lib/" > /etc/ld.so.conf.d/hm.conf
     ldconfig
 
-    echo ""
-    echo "Configure BidCos-Wired interface:"
-    echo -n "Input serial number: "
-    read SERIAL
-    echo -n "Input encryption key: "
-    read KEY
-    echo -n "Input IP-Address: "
-    read IP
+    if [ -f "$ETC/hs485d.conf" ]; then
+        echo ""
+        read -p "Keep existing hs485d.conf (Y/n)? " choice
+        case "$choice" in
+            n|N )
+                NEWHS485DCONF=1
+                ;;
+            * )
+                NEWHS485DCONF=0
+                ;;
+        esac
+    else
+        NEWHS485DCONF=1
+    fi
+
+    if [[ "$NEWHS485DCONF" -gt 0 ]]; then
+
+        echo ""
+        echo "Configure BidCos-Wired interface:"
+        echo -n "Input serial number: "
+        read SERIAL
+        echo -n "Input encryption key: "
+        read KEY
+        echo -n "Input IP-Address: "
+        read IP
 
 cat > $ETC/hs485d.conf <<- EOM
 Listen Port = 2000
@@ -369,8 +386,10 @@ XmlRpcHandlersFile = $VAR/HS485D.handlers
 Type = HMWLGW
 Serial Number = $SERIAL
 Encryption Key = $KEY
-IP Address = $IP
+#IP Address = $IP
 EOM
+
+    fi
 
     echo ""
     read -p "Install startscript /etc/init.d/hs485d (Y/n)? " choice
@@ -398,7 +417,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/hm/bin
 DESC="HomeMatic BidCoS-RF interface process"
 NAME=hs485d
 DAEMON=$PREFIX/bin/\$NAME
-DAEMON_ARGS="-f $ETC/hs485d.conf -d"
+DAEMON_ARGS="-f $ETC/hs485d.conf -g -i 0"
 PIDFILE=$VAR/hs485d/\$NAME.pid
 SCRIPTNAME=/etc/init.d/\$NAME
 USER=$USER
@@ -409,11 +428,10 @@ USER=$USER
 
 . /lib/lsb/init-functions
 
-$SetupGPIO
 case "\$1" in
   start)
     log_daemon_msg "Starting \$DESC" "\$NAME"
-    start-stop-daemon --start --quiet -c \$USER --exec \$DAEMON -- \$DAEMON_ARGS
+    start-stop-daemon --start --quiet --background -c \$USER --exec \$DAEMON -- \$DAEMON_ARGS
     ;;
   stop)
     log_daemon_msg "Stopping \$DESC" "\$NAME"
@@ -456,17 +474,16 @@ case "$choice" in
 
 esac
 
-# Todo hs485d tests
-#echo ""
-#read -p "Install hs485d (y/N)? " choice
-#case "$choice" in
-#    y|Y )
-#        WIRED=1
-#        hs485d
-#        ;;
-#    * )
-#        ;;
-#esac
+echo ""
+read -p "Install hs485d (y/N)? " choice
+case "$choice" in
+    y|Y )
+        WIRED=1
+        hs485d
+        ;;
+    * )
+        ;;
+esac
 
 manager() {
 
