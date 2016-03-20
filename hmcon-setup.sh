@@ -222,10 +222,10 @@ Persist Keys = 1
 Device Description Dir = $PREFIX/firmware/rftypes
 Device Files Dir = $VAR/rfd/devices
 Key File = $VAR/rfd/keys
-Address File = $VAR/rfd/ids
+Address File = $ETC/rfd/ids
 Firmware Dir = $PREFIX/firmware
 User Firmware Dir = $VAR/firmware
-XmlRpcHandlersFile = $VAR/rfd/RFD.handlers
+XmlRpcHandlersFile = $VAR/RFD.handlers
 Replacemap File = $PREFIX/firmware/rftypes/replaceMap/rfReplaceMap.xml
 EOM
 
@@ -323,8 +323,18 @@ hs485d() {
 
 cat > $ETC/hs485d.conf <<- EOM
 Listen Port = 2000
-Log Destination = Syslog
+
+Log Filename = $VAR/log/hs485d.log
 Log Identifier = hs485d
+Log Level = 1
+# PID File = $VAR/hs485d/hs485d.pid
+Device Description Dir = $PREFIX/firmware/hs485types
+Device Files Dir = $VAR/hs485d/devices
+Firmware Dir = $PREFIX/firmware
+User Firmware Dir = $VAR/firmware
+XmlRpcHandlersFile = $VAR/HS485D.handlers
+
+
 [Interface 0]
 Type = HMWLGW
 Serial Number = $SERIAL
