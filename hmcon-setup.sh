@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.13
+VERSION=0.14
 
 USER=hmcon
 PREFIX=/opt/hmcon
