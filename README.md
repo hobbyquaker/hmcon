@@ -17,9 +17,10 @@ Direktverknüpfungen.
 
 #### Voraussetzungen
 
-Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Nodejs](https://nodejs.org/) Installation.
+Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Node.js<sup>&reg;</sup>](https://nodejs.org/) Installation.
 
-Für Debian armhf (RaspberryPi, ...) siehe https://github.com/nathanjohnson320/node_arm
+Für Debian armhf (RaspberryPi, ...) siehe   
+https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
 
 
 
@@ -29,9 +30,7 @@ Hmcon wird mit einem interaktiven Shell-Script installiert, dass die benötigten
 Konfigurationsdateien und Startscripte anlegt.
 
 ```Shell
-wget https://github.com/hobbyquaker/hmcon/raw/master/hmcon-setup.sh
-chmod a+x hmcon-setup.sh
-sudo ./hmcon-setup.sh
+curl -sL https://raw.githubusercontent.com/ploebb/hmcon/master/hmcon-setup.sh | sudo -E bash -
 ```
 
 Updates können ebenfalls mit hmcon-setup.sh durchgeführt werden.
