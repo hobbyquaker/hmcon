@@ -7,6 +7,7 @@ PREFIX=/opt/hmcon
 VAR=$PREFIX/var
 ETC=$PREFIX/etc
 
+ASK_TO_REBOOT=0
 echo ""
 echo "  Hmcon Setup $VERSION"
 echo "  ---------------"
@@ -147,8 +148,9 @@ SetupGPIO="# export GPIO
 						sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
 					fi
 					sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
-
 					sed -i /boot/cmdline.txt -e "s/console=serial0,[0-9]\+ //"
+					ASK_TO_REBOOT=1
+					
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
 					# if group gpio doesn't exist, creat it and create a corresponding udev-rule
 					if ! grep gpio /etc/group >/dev/null 2>&1; then
@@ -647,7 +649,7 @@ echo "-----------"
 echo "Configuration files are located in $ETC"
 echo "Logfiles are located in $VAR/log"
 
-if [ -f "$ETC/rfd.conf" ]; then
+if [ -f "$ETC/rfd.conf" ] && [ $ASK_TO_REBOOT -eq 0 ]; then
     echo ""
     read -p "Start rfd now (Y/n)? " choice
     case "$choice" in
@@ -658,7 +660,7 @@ if [ -f "$ETC/rfd.conf" ]; then
     esac
 fi
 
-if [ -f "$ETC/hs485d.conf" ]; then
+if [ -f "$ETC/hs485d.conf" ] && [ $ASK_TO_REBOOT -eq 0 ]; then
     echo ""
     read -p "Start hs485d now (Y/n)? " choice
     case "$choice" in
@@ -669,7 +671,7 @@ if [ -f "$ETC/hs485d.conf" ]; then
     esac
 fi
 
-if [ -f "$ETC/hm-manager.json" ]; then
+if [ -f "$ETC/hm-manager.json" ] && [ $ASK_TO_REBOOT -eq 0 ]; then
     echo ""
     read -p "Start Homematic Manager now (Y/n)? " choice
     case "$choice" in
@@ -681,5 +683,15 @@ if [ -f "$ETC/hm-manager.json" ]; then
     esac
 fi
 
+if [ $ASK_TO_REBOOT -eq 1 ]; then
+    echo ""
+    read -p "Reboot required. Reboot now (Y/n)? " choice
+    case "$choice" in
+        n|N ) ;;
+        * )
+			shutdown -r now
+        ;;
+    esac
+fi
 echo ""
 echo "Have Fun :)"
