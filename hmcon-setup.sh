@@ -133,16 +133,22 @@ SetupGPIO="# export GPIO
       echo out > /sys/class/gpio/gpio18/direction
   fi
 "
-                    # disable serial console
-                    read -d . DEBIAN_VERSION < /etc/debian_version
-                    if (($DEBIAN_VERSION==8)); then
-                        echo 'disabling serial-getty'
-                        systemctl disable serial-getty@ttyAMA0.service
-                    else
-                        echo 'disabling serial console'
-                        sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
-                        sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
-                    fi
+                    # disable serial console (code from raspi-config)
+					echo "disabling serial-console"
+					if command -v systemctl > /dev/null && systemctl | grep -q '\-\.mount'; then
+						SYSTEMD=1
+					elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
+						SYSTEMD=0
+					else
+						echo "[Warning] Unrecognised init system"
+					fi
+					
+					if [ $SYSTEMD -eq 0 ]; then
+						sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
+					fi
+					sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
+
+					sed -i /boot/cmdline.txt -e "s/console=serial0,[0-9]\+ //"
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
 					# if group gpio doesn't exist, creat it and create a corresponding udev-rule
 					if ! grep gpio /etc/group >/dev/null 2>&1; then
@@ -228,6 +234,7 @@ EOM
                 esac
             done
 
+			echo ""
             read -p "Add another rf interface (y/N)? " choice
             case "$choice" in
                 y|Y )
