@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.15
+VERSION=0.16
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -508,6 +508,7 @@ case "$choice" in
         hs485d
         ;;
     * )
+        WIRED=0
         ;;
 esac
 
