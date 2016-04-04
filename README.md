@@ -17,23 +17,7 @@ Direktverknüpfungen.
 
 #### Voraussetzungen
 
-Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Node.js<sup>&reg;</sup>](https://nodejs.org/) Installation.
-
-Für Debian armhf (RaspberryPi, ...) siehe   
-https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
-
-
-
-#### Installation von Hmcon
-
-Hmcon wird mit einem interaktiven Shell-Script installiert, dass die benötigten Software-Komponenten herunterlädt sowie
-Konfigurationsdateien und Startscripte anlegt.
-
-```Shell
-curl -sL https://raw.githubusercontent.com/ploebb/hmcon/master/hmcon-setup.sh | sudo -E bash -
-```
-
-Updates können ebenfalls mit hmcon-setup.sh durchgeführt werden.
+Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Nodejs](https://nodejs.org/) Installation.
 
 Bisher auf folgenden Betriebssystemen getestet:
 
@@ -46,6 +30,23 @@ Unterstützte Architekturen: armhf, i386, amd64
 Um Hmcon auf einem 64Bit Betriebssystem auszuführen siehe
 https://www.thomas-krenn.com/de/wiki/Debian_7_32bit_Libraries oder http://askubuntu.com/questions/454253/how-to-run-32-bit-app-in-ubuntu-64-bit.
 
+#### Installation von Hmcon
+
+Hmcon wird mit einem interaktiven Shell-Script installiert, dass die benötigten Software-Komponenten herunterlädt sowie
+Konfigurationsdateien und Startscripte anlegt.
+
+```Shell
+wget https://github.com/hobbyquaker/hmcon/raw/master/hmcon-setup.sh
+chmod a+x hmcon-setup.sh
+sudo ./hmcon-setup.sh
+```
+
+Updates können ebenfalls mit hmcon-setup.sh durchgeführt werden.
+
+
+#### Migration von einer CCU2
+
+Ein Tool um CCU2-Backups in Hmcon einzuspielen steht hier zur Verfügung: https://github.com/hobbyquaker/hmcon-restore
 
 ## Lizenzen
 
