@@ -18,7 +18,7 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-command -v git >/dev/null 2>&1 || { echo >&2 "git required, but it's not installed.  Aborting."; exit 1; }
+command -v git >/dev/null 2>&1 || { apt-get install git }
 
 mkdir -p $ETC >/dev/null 2>&1
 mkdir -p $VAR/log >/dev/null 2>&1
