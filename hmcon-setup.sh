@@ -135,43 +135,43 @@ SetupGPIO="# export GPIO
   fi
 "
                     # disable serial console (code from raspi-config)
-					echo "disabling serial-console"
-					if command -v systemctl > /dev/null && systemctl | grep -q '\-\.mount'; then
-						SYSTEMD=1
-					elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
-						SYSTEMD=0
-					else
-						echo "[Warning] Unrecognised init system"
-					fi
-					
-					if [ $SYSTEMD -eq 0 ]; then
-						sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
-					fi
-					sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
-					sed -i /boot/cmdline.txt -e "s/console=serial0,[0-9]\+ //"
-					ASK_TO_REBOOT=1
-					
+                    echo "disabling serial-console"
+                    if command -v systemctl > /dev/null && systemctl | grep -q '\-\.mount'; then
+                        SYSTEMD=1
+                    elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
+                        SYSTEMD=0
+                    else
+                        echo "[Warning] Unrecognised init system"
+                    fi
+                    
+                    if [ $SYSTEMD -eq 0 ]; then
+                        sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
+                    fi
+                    sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
+                    sed -i /boot/cmdline.txt -e "s/console=serial0,[0-9]\+ //"
+                    ASK_TO_REBOOT=1
+                    
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
-					# if group gpio doesn't exist, creat it and create a corresponding udev-rule
-					if ! grep gpio /etc/group >/dev/null 2>&1; then
-						groupadd gpio
-						UDEVFILE=99-rfd-gpio.rules
-						echo "creating new udev-rule for gpio"
+                    # if group gpio doesn't exist, creat it and create a corresponding udev-rule
+                    if ! grep gpio /etc/group >/dev/null 2>&1; then
+                        groupadd gpio
+                        UDEVFILE=99-rfd-gpio.rules
+                        echo "creating new udev-rule for gpio"
 cat > /etc/udev/rules.d/$UDEVFILE <<- EOM
 SUBSYSTEM=="gpio*", PROGRAM="/bin/sh -c 'chown -R root:gpio /sys/class/gpio && chmod -R 770 /sys/class/gpio; chown -R root:gpio /sys/devices/virtual/gpio && chmod -R 770 /sys/devices/virtual/gpio; chown -R root:gpio /sys/devices/platform/soc/*.gpio/gpio && chmod -R 770 /sys/devices/platform/soc/*.gpio/gpio'"
 EOM
-						if grep "SUBSYSTEM==\"gpio\"" --exclude=$UDEVFILE /etc/udev/rules.d/* >/dev/null 2>&1; then
-							echo ""
-							echo "[WARNING] Another udev-rule for the gpios is already in place and may conflict with the one added here.\r"
-							echo "[WARNING] The rule in question is: "
-							grep "SUBSYSTEM==\"gpio\"" --exclude=$UDEVFILE /etc/udev/rules.d/*
-							echo "[WARNING] Check rfd.log for errors"
-						fi
-						udevadm control --reload-rules
-					fi
-					
-					echo "adding user hmcon to gpio and dialout group"
-					usermod -a -G gpio,dialout $USER
+                        if grep "SUBSYSTEM==\"gpio\"" --exclude=$UDEVFILE /etc/udev/rules.d/* >/dev/null 2>&1; then
+                            echo ""
+                            echo "[WARNING] Another udev-rule for the gpios is already in place and may conflict with the one added here.\r"
+                            echo "[WARNING] The rule in question is: "
+                            grep "SUBSYSTEM==\"gpio\"" --exclude=$UDEVFILE /etc/udev/rules.d/*
+                            echo "[WARNING] Check rfd.log for errors"
+                        fi
+                        udevadm control --reload-rules
+                    fi
+                    
+                    echo "adding user hmcon to gpio and dialout group"
+                    usermod -a -G gpio,dialout $USER
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = CCU2
@@ -236,7 +236,7 @@ EOM
                 esac
             done
 
-			echo ""
+            echo ""
             read -p "Add another rf interface (y/N)? " choice
             case "$choice" in
                 y|Y )
@@ -689,7 +689,7 @@ if [ $ASK_TO_REBOOT -eq 1 ]; then
     case "$choice" in
         n|N ) ;;
         * )
-			shutdown -r now
+            shutdown -r now
         ;;
     esac
 fi
