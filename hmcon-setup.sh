@@ -144,9 +144,26 @@ SetupGPIO="# export GPIO
                         sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
                     fi
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
-                    echo "adding user hmcon to gpio group"
-                    usermod -a -G gpio hmcon
-
+					# if group gpio doesn't exist, creat it and create a corresponding udev-rule
+					if ! grep gpio /etc/group >/dev/null 2>&1; then
+						groupadd gpio
+						UDEVFILE=99-rfd-gpio.rules
+						echo "creating new udev-rule for gpio"
+cat > /etc/udev/rules.d/$UDEVFILE <<- EOM
+SUBSYSTEM=="gpio*", PROGRAM="/bin/sh -c 'chown -R root:gpio /sys/class/gpio && chmod -R 770 /sys/class/gpio; chown -R root:gpio /sys/devices/virtual/gpio && chmod -R 770 /sys/devices/virtual/gpio; chown -R root:gpio /sys/devices/platform/soc/*.gpio/gpio && chmod -R 770 /sys/devices/platform/soc/*.gpio/gpio'"
+EOM
+						if grep "SUBSYSTEM==\"gpio\"" --exclude=$UDEVFILE /etc/udev/rules.d/* >/dev/null 2>&1; then
+							echo ""
+							echo "[WARNING] Another udev-rule for the gpios is already in place and may conflict with the one added here.\r"
+							echo "[WARNING] The rule in question is: "
+							grep "SUBSYSTEM==\"gpio\"" --exclude=$UDEVFILE /etc/udev/rules.d/*
+							echo "[WARNING] Check rfd.log for errors"
+						fi
+						udevadm control --reload-rules
+					fi
+					
+					echo "adding user hmcon to gpio and dialout group"
+					usermod -a -G gpio,dialout $USER
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = CCU2
