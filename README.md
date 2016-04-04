@@ -36,7 +36,7 @@ Hmcon wird mit einem interaktiven Shell-Script installiert, dass die benötigten
 Konfigurationsdateien und Startscripte anlegt.
 
 ```Shell
-curl -sL https://raw.githubusercontent.com/ploebb/hmcon/master/hmcon-setup.sh | sudo -E bash -
+curl -sL https://raw.githubusercontent.com/hobbyquaker/hmcon/master/hmcon-setup.sh | sudo -E bash -
 ```
 
 Updates können ebenfalls mit hmcon-setup.sh durchgeführt werden.
