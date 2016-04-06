@@ -4,7 +4,7 @@ Homematic Funk-/Wired-Schnittstellen-Software
 
 ![architecture](img/hmcon-current.png)
 
-Hmcon dient als Schnittstelle zwischen Smarthome-Software (wie z.B. hm2mqtt, ioBroker oder OpenHAB) und Homematic Funk-
+Hmcon dient als Schnittstelle zwischen Smarthome-Software (wie z.B. [hm2mqtt](https://github.com/owagner/hm2mqtt)/[mqtt-smarthome](https://github.com/mqtt-smarthome/mqtt-smarthome), ioBroker oder IP-Symcon) und Homematic Funk-
 und Wired-Geräten. Hierfür kommen die Schnittstellenprozesse "rfd" und "hs485d" zum Einsatz, die
 [eQ-3](http://www.eq-3.de) als Teil der [OCCU](https://github.com/eq-3/occu) in Binärform unter der
 ["HMSL" Lizenz](https://github.com/eq-3/occu/blob/master/LicenseDE.txt) zur Verfügung stellt. Auf die Logikschicht
@@ -12,6 +12,7 @@ und Wired-Geräten. Hierfür kommen die Schnittstellenprozesse "rfd" und "hs485d
 [Homematic Manager](https://github.com/hobbyquaker/homematic-manager) als Weboberfläche zur Verwaltung von Geräten und
 Direktverknüpfungen.
 
+Stand Heute nutzt Hmcon zwar die 2.17er OCCU Firmware (inklusive 
 
 ## Installation
 
