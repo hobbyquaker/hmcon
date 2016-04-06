@@ -17,18 +17,32 @@ Direktverknüpfungen.
 
 #### Voraussetzungen
 
-Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Nodejs](https://nodejs.org/) Installation.
-
 Bisher auf folgenden Betriebssystemen getestet:
 
 * Debian Wheezy (armhf)
 * Debian Jessie (armhf)
 * Ubuntu 14.04 (amd64)
 
-Unterstützte Architekturen: armhf, i386, amd64
-
 Um Hmcon auf einem 64Bit Betriebssystem auszuführen siehe
 https://www.thomas-krenn.com/de/wiki/Debian_7_32bit_Libraries oder http://askubuntu.com/questions/454253/how-to-run-32-bit-app-in-ubuntu-64-bit.
+
+
+Hmcon benötigt (falls man den Homematic Manager nutzen will) eine [Nodejs](https://nodejs.org/) Installation:
+Empfohlene Vorgehensweise:
+
+* Auf aktuellen Raspberrys (Pi2/3) und auf x86/amd64 Plattformen kann das offizielle Repository von nodesource.com genutzt werden:
+```
+curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+sudo apt-get install -y nodejs build-essential
+```
+
+* Leider funktioniert der Build von nodesource.com Für alte Raspberrys (Pi1, Model B) nicht. Ein funktionierenden Build für ARMv6 gibt es auf https://github.com/nathanjohnson320/node_arm
+```
+wget http://node-arm.herokuapp.com/node_latest_armhf.deb
+sudo dpkg -i node_latest_armhf.deb
+```
+
+* Ein weiterer komfortabler Weg Nodejs zu installieren ist auch das Tool [n](https://github.com/tj/n) - besonders zu empfehlen wenn man (gleichzeitig) mit unterschiedlichen Nodejs Versionen arbeiten muss.
 
 #### Installation von Hmcon
 
