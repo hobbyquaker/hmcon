@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.17
+VERSION=0.18
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -176,9 +176,7 @@ EOM
                     "HM-CFG-USB-2")
                         SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 "" --title "HM-CFG-USB-2 Serial" 3>&1 1>&2 2>&3)
                         exitstatus=$?
-                        if [ $exitstatus = 0 ]; then
-                            echo "User selected Ok and entered " $SERIAL
-                        else
+                        if [ $exitstatus != 0 ]; then
                             continue;
                         fi
 cat >> $ETC/rfd.conf <<- EOM
@@ -196,16 +194,12 @@ EOM
                     "HM-CFG-LAN")
                         SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 --title "HM-CFG-LAN Serial" 3>&1 1>&2 2>&3)
                         exitstatus=$?
-                        if [ $exitstatus = 0 ]; then
-                            echo "User selected Ok and entered " $SERIAL
-                        else
+                        if [ $exitstatus != 0 ]; then
                             continue;
                         fi
                         KEY=$(whiptail --inputbox "\n\nEnter Encryption Key" 20 60 --title "HM-CFG-LAN Key" 3>&1 1>&2 2>&3)
                         exitstatus=$?
-                        if [ $exitstatus = 0 ]; then
-                            echo "User selected Ok and entered " KEY
-                        else
+                        if [ $exitstatus != 0 ]; then
                             continue;
                         fi
 cat >> $ETC/rfd.conf <<- EOM
@@ -220,16 +214,12 @@ EOM
                     "HM-LGW-O-TW-W-EU")
                         SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 --title "HM-LGW-O-TW-W-EU Serial" 3>&1 1>&2 2>&3)
                         exitstatus=$?
-                        if [ $exitstatus = 0 ]; then
-                            echo "User selected Ok and entered " $SERIAL
-                        else
+                        if [ $exitstatus != 0 ]; then
                             continue;
                         fi
                         KEY=$(whiptail --inputbox "\n\nEnter Encryption Key" 20 60 --title "HM-LGW-O-TW-W-EU Key" 3>&1 1>&2 2>&3)
                         exitstatus=$?
-                        if [ $exitstatus = 0 ]; then
-                            echo "User selected Ok and entered " KEY
-                        else
+                        if [ $exitstatus != 0 ]; then
                             continue;
                         fi
 
@@ -382,23 +372,17 @@ hs485d() {
 
         SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 "" --title "HMW LAN GW Serial" 3>&1 1>&2 2>&3)
         exitstatus=$?
-        if [ $exitstatus = 0 ]; then
-            echo "User selected Ok and entered " $SERIAL
-        else
+        if [ $exitstatus != 0 ]; then
             return;
         fi
         KEY=$(whiptail --inputbox "\n\nEnter Encryption Key" 20 60 "" --title "HMW LAN GW Serial" 3>&1 1>&2 2>&3)
         exitstatus=$?
-        if [ $exitstatus = 0 ]; then
-            echo "User selected Ok and entered " $KEY
-        else
+        if [ $exitstatus != 0 ]; then
             return;
         fi
         IP=$(whiptail --inputbox "\n\nEnter IP Address" 20 60 "" --title "HMW LAN GW Serial" 3>&1 1>&2 2>&3)
         exitstatus=$?
-        if [ $exitstatus = 0 ]; then
-            echo "User selected Ok and entered " $IP
-        else
+        if [ $exitstatus != 0 ]; then
             return;
         fi
 
@@ -516,7 +500,6 @@ manager() {
     INPUT=$(whiptail --inputbox "\n\nHomematic Manager Webserver Port" 20 60 "8081" --title "Homematic Manager Port" 3>&1 1>&2 2>&3)
     exitstatus=$?
     if [ $exitstatus = 0 ]; then
-        echo "User selected Ok and entered " $INPUT
         PORT=${INPUT:-8081}
         nc -z localhost $PORT
         if [ $? -eq 0 ]; then
