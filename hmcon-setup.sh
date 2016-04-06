@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=0.16
+VERSION=0.17
 
 USER=hmcon
 PREFIX=/opt/hmcon
@@ -8,15 +8,13 @@ VAR=$PREFIX/var
 ETC=$PREFIX/etc
 
 ASK_TO_REBOOT=0
-echo ""
-echo "  Hmcon Setup $VERSION"
-echo "  ---------------"
-echo ""
 
 if [ "$(id -u)" != "0" ]; then
    echo "This script must be run as root" 1>&2
    exit 1
 fi
+
+whiptail --msgbox "Hmcon Setup $VERSION" 20 72
 
 command -v git >/dev/null 2>&1 || { apt-get install git; }
 
@@ -37,24 +35,21 @@ chmod a+x /etc/profile.d/hm.sh
 
 if [ -f "/etc/init.d/rfd" ]; then
     /etc/init.d/rfd stop
-    echo ""
 fi
 if [ -f "/etc/init.d/hs485d" ]; then
     /etc/init.d/hs485d stop
-    echo ""
 fi
 if [ -f "/etc/init.d/hm-manager" ]; then
     /etc/init.d/hm-manager stop
-    echo ""
 fi
 
 
 
 if id -u "$USER" >/dev/null 2>&1; then
-        usermod -s /bin/false -d $PREFIX $USER
+    usermod -s /bin/false -d $PREFIX $USER
 else
-        echo "Adding user $USER"
-        useradd -r -s /bin/false -d $PREFIX $USER
+    echo "Adding user $USER"
+    useradd -r -s /bin/false -d $PREFIX $USER
 fi
 
 ARCH=`arch`
@@ -94,15 +89,16 @@ rfd() {
     mkdir -p $VAR/rfd/devices >/dev/null 2>&1
     mkdir -p $PREFIX/bin >/dev/null 2>&1
 
-    # use rfd from 2.15 occu
+    # use rfd from 2.15.5 occu (classic rfd without HmIP Support - not crRFD, no multimacd)
     cd $PREFIX/src/occu
-    echo "checking out 2.15.5 "
+    echo "checking out OCCU 2.15.5"
     git checkout 83e776407df0fe65cea7b5cb4f62307088e1c887 .
 
     cp $SRC/RFD/bin/rfd $PREFIX/bin/
     cp $SRC/RFD/bin/SetInterfaceClock $PREFIX/bin/
     cp $SRC/RFD/bin/avrprog $PREFIX/bin/
 
+    echo "checking out OCCU head"
     git reset --hard
 
 
@@ -116,23 +112,19 @@ rfd() {
         ADD=1
         while [ $ADD -gt 0  ];
         do
-
-            echo ""
-            PS3="Choose BidCos-RF interface $i type: "
-            options=("HM-MOD-RPI-PCB" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "cancel")
-
-            select opt in "${options[@]}"
-            do
-
+            opt=$(whiptail --radiolist test 20 60 4 "HM-MOD-RPI-PCB" "HM-MOD-RPI-PCB" "HM-MOD-RPI-PCB" "HM-CFG-USB-2" "HM-CFG-USB-2" "HM-CFG-USB-2" "HM-CFG-LAN" "HM-CFG-LAN" "HM-CFG-LAN" "HM-LGW-O-TW-W-EU" "HM-LGW-O-TW-W-EU" "HM-LGW-O-TW-W-EU" 3>&1 1>&2 2>&3)
+            exitstatus=$?
+            if [ $exitstatus = 0 ]; then
                 case $opt in
+
                     "HM-MOD-RPI-PCB")
 
                     #prepare additional snippet for rfd init script
-SetupGPIO="# export GPIO
-  if [ ! -d /sys/class/gpio/gpio18 ] ; then
-      echo 18 > /sys/class/gpio/export
-      echo out > /sys/class/gpio/gpio18/direction
-  fi
+                    SetupGPIO="# export GPIO
+if [ ! -d /sys/class/gpio/gpio18 ] ; then
+  echo 18 > /sys/class/gpio/export
+  echo out > /sys/class/gpio/gpio18/direction
+fi
 "
                     # disable serial console (code from raspi-config)
                     echo "disabling serial-console"
@@ -143,14 +135,14 @@ SetupGPIO="# export GPIO
                     else
                         echo "[Warning] Unrecognised init system"
                     fi
-                    
+
                     if [ $SYSTEMD -eq 0 ]; then
                         sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
                     fi
                     sed -i /boot/cmdline.txt -e "s/console=ttyAMA0,[0-9]\+ //"
                     sed -i /boot/cmdline.txt -e "s/console=serial0,[0-9]\+ //"
                     ASK_TO_REBOOT=1
-                    
+
                     # allow hmcon gpio access when using HM-MOD-RPI-PCB
                     # if group gpio doesn't exist, creat it and create a corresponding udev-rule
                     if ! grep gpio /etc/group >/dev/null 2>&1; then
@@ -169,7 +161,7 @@ EOM
                         fi
                         udevadm control --reload-rules
                     fi
-                    
+
                     echo "adding user hmcon to gpio and dialout group"
                     usermod -a -G gpio,dialout $USER
 cat >> $ETC/rfd.conf <<- EOM
@@ -180,11 +172,15 @@ AccessFile = /dev/null
 ResetFile = /sys/class/gpio/gpio18/value
 EOM
                         i=`expr $i + 1`
-                        break
                         ;;
                     "HM-CFG-USB-2")
-                        echo -n "Input serial number: "
-                        read SERIAL
+                        SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 "" --title "HM-CFG-USB-2 Serial" 3>&1 1>&2 2>&3)
+                        exitstatus=$?
+                        if [ $exitstatus = 0 ]; then
+                            echo "User selected Ok and entered " $SERIAL
+                        else
+                            continue;
+                        fi
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = USB Interface
@@ -196,13 +192,22 @@ EOM
                         echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1b1f\", ATTR{idProduct}==\"c010\", MODE:=\"0666\"" >> /etc/udev/rules.d/homematic.rules
 
                         i=`expr $i + 1`
-                        break
                         ;;
                     "HM-CFG-LAN")
-                        echo -n "Input serial number: "
-                        read SERIAL
-                        echo -n "Input encryption key: "
-                        read KEY
+                        SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 --title "HM-CFG-LAN Serial" 3>&1 1>&2 2>&3)
+                        exitstatus=$?
+                        if [ $exitstatus = 0 ]; then
+                            echo "User selected Ok and entered " $SERIAL
+                        else
+                            continue;
+                        fi
+                        KEY=$(whiptail --inputbox "\n\nEnter Encryption Key" 20 60 --title "HM-CFG-LAN Key" 3>&1 1>&2 2>&3)
+                        exitstatus=$?
+                        if [ $exitstatus = 0 ]; then
+                            echo "User selected Ok and entered " KEY
+                        else
+                            continue;
+                        fi
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = Lan Interface
@@ -210,13 +215,24 @@ Serial Number = $SERIAL
 Encryption Key = $KEY
 EOM
                         i=`expr $i + 1`
-                        break
+
                         ;;
                     "HM-LGW-O-TW-W-EU")
-                        echo -n "Input serial number: "
-                        read SERIAL
-                        echo -n "Input encryption key: "
-                        read KEY
+                        SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 --title "HM-LGW-O-TW-W-EU Serial" 3>&1 1>&2 2>&3)
+                        exitstatus=$?
+                        if [ $exitstatus = 0 ]; then
+                            echo "User selected Ok and entered " $SERIAL
+                        else
+                            continue;
+                        fi
+                        KEY=$(whiptail --inputbox "\n\nEnter Encryption Key" 20 60 --title "HM-LGW-O-TW-W-EU Key" 3>&1 1>&2 2>&3)
+                        exitstatus=$?
+                        if [ $exitstatus = 0 ]; then
+                            echo "User selected Ok and entered " KEY
+                        else
+                            continue;
+                        fi
+
 cat >> $ETC/rfd.conf <<- EOM
 [Interface $i]
 Type = HMLGW2
@@ -225,40 +241,30 @@ Serial Number = $SERIAL
 Encryption Key = $KEY
 EOM
                         i=`expr $i + 1`
-                        break
                         ;;
-                    "cancel")
-                        break
-                        ;;
-                    *)
-                        echo "invalid option"
-                        ;;
-                esac
-            done
 
-            echo ""
-            read -p "Add another rf interface (y/N)? " choice
-            case "$choice" in
-                y|Y )
-                    ;;
-                * )
-                    ADD=0
-                    ;;
-            esac
+                esac
+
+            fi
+
+            whiptail --yesno "Add another rf interface" 20 60 2
+            if [ $? -eq 0 ]; then # yes
+                ADD=1
+            else
+                ADD=0
+            fi
+
         done
+
     }
 
     if [ -f "$ETC/rfd.conf" ]; then
-        echo ""
-        read -p "Keep existing rfd.conf (Y/n)? " choice
-        case "$choice" in
-            n|N )
-                NEWRFDCONF=1
-                ;;
-            * )
-                NEWRFDCONF=0
-                ;;
-        esac
+        whiptail --yesno "Keep existing rfd.conf" 20 60 2
+        if [ $? -eq 0 ]; then # yes
+            NEWRFDCONF=0
+        else
+            NEWRFDCONF=1
+        fi
     else
         NEWRFDCONF=1
     fi
@@ -286,14 +292,8 @@ EOM
         rfdInterface
     fi
 
-    echo ""
-    read -p "Install startscript /etc/init.d/rfd (Y/n)? " choice
-    case "$choice" in
-         n|N )
-            ADD=0
-            ;;
-        * )
-
+    whiptail --yesno "Install startscript /etc/init.d/rfd" 20 60 2
+    if [ $? -eq 0 ]; then # yes
 cat > /etc/init.d/rfd <<- EOM
 #! /bin/sh
 ### BEGIN INIT INFO
@@ -346,10 +346,9 @@ esac
 EOM
         chmod a+x /etc/init.d/rfd
         update-rc.d rfd defaults
-
-
-            ;;
-    esac
+    else
+        ADD=0
+    fi
 
 }
 
@@ -369,30 +368,39 @@ hs485d() {
     ldconfig
 
     if [ -f "$ETC/hs485d.conf" ]; then
-        echo ""
-        read -p "Keep existing hs485d.conf (Y/n)? " choice
-        case "$choice" in
-            n|N )
-                NEWHS485DCONF=1
-                ;;
-            * )
-                NEWHS485DCONF=0
-                ;;
-        esac
+        whiptail --yesno "Keep existing hs485d.conf" 20 60 2
+        if [ $? -eq 0 ]; then # yes
+            NEWHS485DCONF=0
+        else
+            NEWHS485DCONF=1
+        fi
     else
         NEWHS485DCONF=1
     fi
 
     if [[ "$NEWHS485DCONF" -gt 0 ]]; then
 
-        echo ""
-        echo "Configure BidCos-Wired interface:"
-        echo -n "Input serial number: "
-        read SERIAL
-        echo -n "Input encryption key: "
-        read KEY
-        echo -n "Input IP-Address: "
-        read IP
+        SERIAL=$(whiptail --inputbox "\n\nEnter Serial Number" 20 60 "" --title "HMW LAN GW Serial" 3>&1 1>&2 2>&3)
+        exitstatus=$?
+        if [ $exitstatus = 0 ]; then
+            echo "User selected Ok and entered " $SERIAL
+        else
+            return;
+        fi
+        KEY=$(whiptail --inputbox "\n\nEnter Encryption Key" 20 60 "" --title "HMW LAN GW Serial" 3>&1 1>&2 2>&3)
+        exitstatus=$?
+        if [ $exitstatus = 0 ]; then
+            echo "User selected Ok and entered " $KEY
+        else
+            return;
+        fi
+        IP=$(whiptail --inputbox "\n\nEnter IP Address" 20 60 "" --title "HMW LAN GW Serial" 3>&1 1>&2 2>&3)
+        exitstatus=$?
+        if [ $exitstatus = 0 ]; then
+            echo "User selected Ok and entered " $IP
+        else
+            return;
+        fi
 
 cat > $ETC/hs485d.conf <<- EOM
 Listen Port = 2000
@@ -417,14 +425,8 @@ EOM
 
     fi
 
-    echo ""
-    read -p "Install startscript /etc/init.d/hs485d (Y/n)? " choice
-    case "$choice" in
-         n|N )
-            ADD=0
-            ;;
-        * )
-
+    whiptail --yesno "Install startscript /etc/init.d/hs485d" 20 60 2
+    if [ $? -eq 0 ]; then # yes
 cat > /etc/init.d/hs485d <<- EOM
 #! /bin/sh
 ### BEGIN INIT INFO
@@ -478,39 +480,27 @@ EOM
         chmod a+x /etc/init.d/hs485d
         update-rc.d hs485d defaults
 
-
-        ;;
-    esac
-
-
+    else
+        ADD=0
+    fi
 
 }
 
+whiptail --yesno "Install rfd?" 20 60 2
+if [ $? -eq 0 ]; then # yes
+    RF=1
+    rfd
+else
+    RF=0
+fi
 
-
-echo ""
-read -p "Install rfd (Y/n)? " choice
-case "$choice" in
-    n|N )
-        ;;
-    * )
-        RF=1
-        rfd
-        ;;
-
-esac
-
-echo ""
-read -p "Install hs485d (y/N)? " choice
-case "$choice" in
-    y|Y )
-        WIRED=1
-        hs485d
-        ;;
-    * )
-        WIRED=0
-        ;;
-esac
+whiptail --yesno "Install hs485d?" 20 60 2 --defaultno
+if [ $? -eq 0 ]; then # yes
+    WIRED=1
+    hs485d
+else
+    WIRED=0
+fi
 
 manager() {
 
@@ -523,14 +513,16 @@ manager() {
     npm install homematic-manager
     ln -s $PREFIX/node_modules/.bin/hm-manager $PREFIX/bin/hm-manager >/dev/null 2>&1
 
-    echo ""
-    read -p "Choose Homematic Manager webserver port [8081] " INPUT
-    PORT=${INPUT:-8081}
-    nc -z localhost $PORT
-    if [ $? -eq 0 ]; then
-            echo "Warning Port $PORT seems to be already in use!"
-    fi
-    if [ $WIRED -eq 1 ]; then
+    INPUT=$(whiptail --inputbox "\n\nHomematic Manager Webserver Port" 20 60 "8081" --title "Homematic Manager Port" 3>&1 1>&2 2>&3)
+    exitstatus=$?
+    if [ $exitstatus = 0 ]; then
+        echo "User selected Ok and entered " $INPUT
+        PORT=${INPUT:-8081}
+        nc -z localhost $PORT
+        if [ $? -eq 0 ]; then
+                echo "Warning Port $PORT seems to be already in use!"
+        fi
+        if [ $WIRED -eq 1 ]; then
 cat > $PREFIX/etc/hm-manager.json <<- EOM
 {
     "webServerPort": $PORT,
@@ -554,7 +546,7 @@ cat > $PREFIX/etc/hm-manager.json <<- EOM
     "language": "de"
 }
 EOM
-    else
+        else
 cat > $PREFIX/etc/hm-manager.json <<- EOM
 {
     "webServerPort": $PORT,
@@ -572,17 +564,15 @@ cat > $PREFIX/etc/hm-manager.json <<- EOM
     "language": "de"
 }
 EOM
+        fi
+
+        chown $USER $PREFIX/etc/hm-manager.json
+    else
+        return;
     fi
 
-    chown $USER $PREFIX/etc/hm-manager.json
-
-    echo ""
-    read -p "Install startscript /etc/init.d/hm-manager (Y/n)? " choice
-    case "$choice" in
-         n|N )
-            ADD=0
-            ;;
-        * )
+    whiptail --yesno "Install startscript /etc/init.d/hm-manager?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
 
 cat > /etc/init.d/hm-manager <<- EOM
 #! /bin/sh
@@ -621,18 +611,17 @@ EOM
         update-rc.d hm-manager defaults
 
 
-            ;;
-    esac
+    else
+        ADD=0
+    fi
 
 }
 
 
-echo ""
-read -p "Install Homematic Manager (Y/n)? " choice
-case "$choice" in
-    n|N ) ;;
-    * ) manager;;
-esac
+whiptail --yesno "Install Homematic Manager?" 20 60 2
+if [ $? -eq 0 ]; then # yes
+    manager
+fi
 
 # FIXME ugly. what if $PREFIX is / ?!?
 chown -R $USER.$USER $PREFIX
@@ -640,59 +629,40 @@ chown -R $USER.$USER $VAR
 chown -R $USER.$USER $ETC
 
 read -d . DEBIAN_VERSION < /etc/debian_version
-if (($DEBIAN_VERSION==8)); then
+if (($DEBIAN_VERSION==8)); then  # TODO
     systemctl daemon-reload
 fi
 
-echo ""
-echo "Setup done."
-echo "-----------"
-echo "Configuration files are located in $ETC"
-echo "Logfiles are located in $VAR/log"
-
 if [ -f "$ETC/rfd.conf" ] && [ $ASK_TO_REBOOT -eq 0 ]; then
-    echo ""
-    read -p "Start rfd now (Y/n)? " choice
-    case "$choice" in
-        n|N ) ;;
-        * )
-            /etc/init.d/rfd start
-        ;;
-    esac
+    whiptail --yesno "Start rfd now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+        /etc/init.d/rfd start
+    fi
 fi
 
 if [ -f "$ETC/hs485d.conf" ] && [ $ASK_TO_REBOOT -eq 0 ]; then
-    echo ""
-    read -p "Start hs485d now (Y/n)? " choice
-    case "$choice" in
-        n|N ) ;;
-        * )
-            /etc/init.d/hs485d start
-        ;;
-    esac
+    whiptail --yesno "Start hs485d now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+        /etc/init.d/hs485d start
+    fi
 fi
 
 if [ -f "$ETC/hm-manager.json" ] && [ $ASK_TO_REBOOT -eq 0 ]; then
-    echo ""
-    read -p "Start Homematic Manager now (Y/n)? " choice
-    case "$choice" in
-        n|N ) ;;
-        * )
-            /etc/init.d/hm-manager start
-            echo "Homematic Manager listening on http://`hostname`:$PORT/"
-        ;;
-    esac
+    whiptail --yesno "Start Homematic Manager now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+        /etc/init.d/hm-manager start
+        HMMPORTHINT="Homematic Manager listening on http://`hostname`:$PORT/"
+    else
+        HMMPORTHINT=""
+    fi
 fi
 
+whiptail --msgbox "Setup done.\n-----------\n\nConfiguration files are located in $ETC\nLogfiles are located in $VAR/log\n$HMMPORTHINT\n\n\n\nHave Fun :-)" 20 60
+
 if [ $ASK_TO_REBOOT -eq 1 ]; then
-    echo ""
-    read -p "Reboot required. Reboot now (Y/n)? " choice
-    case "$choice" in
-        n|N ) ;;
-        * )
-            shutdown -r now
-        ;;
-    esac
+    whiptail --yesno "Reboot required. Would you like to reboot now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+        shutdown -r now
+    fi
 fi
-echo ""
-echo "Have Fun :)"
+
