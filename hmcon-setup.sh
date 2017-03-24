@@ -89,10 +89,10 @@ rfd() {
     mkdir -p $VAR/rfd/devices >/dev/null 2>&1
     mkdir -p $PREFIX/bin >/dev/null 2>&1
 
-    # use rfd from 2.15.5 occu (classic rfd without HmIP Support - not crRFD, no multimacd)
+    # use rfd from 2.27.7 occu (classic rfd without HmIP Support - not crRFD, no multimacd)
     cd $PREFIX/src/occu
-		echo "checking out OCCU 2.21.10"
-    git checkout dd4cd8de54867feab6156ef14b1c667cddd0c691 .
+		echo "checking out OCCU 2.27.7"
+    git checkout 532edbdf01dae7a595323a318711e14853124539 .
 
     cp $SRC/RFD/bin/rfd $PREFIX/bin/
     cp $SRC/RFD/bin/SetInterfaceClock $PREFIX/bin/
