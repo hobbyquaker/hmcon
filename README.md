@@ -1,5 +1,7 @@
 # Hmcon
 
+### Hinweis: dieses Projekt wurde seit geraumer Zeit nicht mehr weiterentwickelt, ich rate davon ab es zu nutzen. Mögliche Alternativen siehe hier: https://github.com/hobbyquaker/awesome-homematic#ccu-alternatives 
+
 Homematic Funk-/Wired-Schnittstellen-Software
 
 ![architecture](img/hmcon-current.png)
